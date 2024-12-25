@@ -48,6 +48,7 @@ jobs:
             echo "Updates detected. Proceeding with build..."
             echo "$latest_digest" > .digest
             echo "update=true" >> $GITHUB_ENV
+          fi
 
       - name: Build and push Docker image
         if: env.update == 'true'
