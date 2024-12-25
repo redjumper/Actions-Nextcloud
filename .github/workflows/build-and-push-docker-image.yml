@@ -1,0 +1,57 @@
+name: Build and Push Docker Image
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 * * *' # 每天 00:00 执行
+
+permissions:
+  contents: write
+
+jobs:
+  check-and-build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Get latest Nextcloud:apache image digest
+        id: get_digest
+        run: |
+          DIGEST=$(curl -s https://registry.hub.docker.com/v2/repositories/library/nextcloud/tags/apache | jq -r '.digest')
+          echo "latest_digest=$DIGEST" >> $GITHUB_ENV
+
+      - name: Compare digests
+        id: compare_digests
+        run: |
+          echo "Fetching previous digest..."
+          PREV_DIGEST=$(cat .digest || echo "")
+          if [ "$PREV_DIGEST" = "$latest_digest" ]; then
+            echo "No updates to the Nextcloud:apache image. Exiting..."
+            echo "update=false" >> $GITHUB_ENV
+          else
+            echo "Updates detected. Proceeding with build..."
+            echo "$latest_digest" > .digest
+            echo "update=true" >> $GITHUB_ENV
+
+      - name: Build and push Docker image
+        if: env.update == 'true'
+        run: |
+          docker build -t fefx/nextcloud:apache .
+          docker push fefx/nextcloud.apache
+
+      - name: Save new digest
+        if: env.update == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .digest
+          git commit -m "Update digest for Nextcloud:apache"
+          git push
+
