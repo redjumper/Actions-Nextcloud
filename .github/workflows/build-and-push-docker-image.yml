@@ -54,7 +54,7 @@ jobs:
         if: env.update == 'true'
         run: |
           docker build -t fefx/nextcloud:apache .
-          docker push fefx/nextcloud.apache
+          docker push fefx/nextcloud:apache
 
       - name: Save new digest
         if: env.update == 'true'
