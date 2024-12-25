@@ -30,9 +30,18 @@ jobs:
       - name: Compare digests
         id: compare_digests
         run: |
-          echo "Fetching previous digest..."
-          PREV_DIGEST=$(cat .digest || echo "")
-          if [ "$PREV_DIGEST" = "$latest_digest" ]; then
+          echo "Checking for .digest file..."
+          if [ -f .digest ]; then
+            PREV_DIGEST=$(cat .digest)
+          else
+            PREV_DIGEST=""
+            echo "No previous digest file found. Will create one after build."
+          fi
+
+          echo "Latest digest: $latest_digest"
+          echo "Previous digest: $PREV_DIGEST"
+
+          if [ "$PREV_DIGEST" == "$latest_digest" ]; then
             echo "No updates to the Nextcloud:apache image. Exiting..."
             echo "update=false" >> $GITHUB_ENV
           else
