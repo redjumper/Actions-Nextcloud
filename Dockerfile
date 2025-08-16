@@ -7,7 +7,7 @@ RUN set -ex; \
     apt-get install -y --no-install-recommends \
         ffmpeg \
         ghostscript \
-        libmagickcore-6.q16-6-extra \
+        libmagickcore-7.q16-10-extra \
         procps \
         smbclient \
         libsmbclient-dev \
